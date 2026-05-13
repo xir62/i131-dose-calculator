@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I-131 Dose Calculator – Corrected Formula</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 950px;
+            margin: auto;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 25px 30px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #1e3a8a;
+            border-left: 6px solid #2563eb;
+            padding-left: 15px;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.3rem;
+            color: #0f3b5c;
+            border-bottom: 2px solid #cbd5e1;
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 170px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #1e293b;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            transition: 0.2s;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+            transform: scale(0.98);
+        }
+        .result-box {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 25px;
+            border: 1px solid #e2e8f0;
+        }
+        .alert {
+            background: #fee2e2;
+            border-left: 6px solid #dc2626;
+            padding: 12px 18px;
+            margin: 12px 0;
+            border-radius: 16px;
+            color: #991b1b;
+        }
+        .warning {
+            background: #fff3e3;
+            border-left: 6px solid #f59e0b;
+        }
+        .success {
+            background: #e0f2fe;
+            border-left: 6px solid #0284c7;
+        }
+        hr {
+            margin: 20px 0;
+        }
+        .badge {
+            display: inline-block;
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+        }
+        footer {
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 25px;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>⚕️ I-131 Dose Calculator | <span style="font-size:0.9rem;">Corrected Marinelli Formula</span></h1>
+    <p><strong>A (MBq) = (25 × m × 300) / (RAUI × 8.04)</strong><br>
+    Where RAUI is the percentage uptake (e.g., 1.04 for 1.04%). Teff = 8.04 days, D<sub>target</sub> = 300 Gy.</p>
+
+    <h2>📋 Patient Data</h2>
+    <div class="form-row">
+        <div class="form-group"><label>Age (years)</label><input type="number" id="age" placeholder=""></div>
+        <div class="form-group"><label>Gender</label><select id="gender"><option>Female</option><option>Male</option></select></div>
+        <div class="form-group"><label>Weight (kg)</label><input type="number" id="weight" placeholder=""></div>
+    </div>
+
+    <h2>🧪 Lab Results</h2>
+    <div class="form-row">
+        <div class="form-group"><label>TSH (uIU/mL)</label><input type="number" step="0.1" id="tsh" value=""></div>
+        <div class="form-group"><label>Thyroglobulin (ng/mL)</label><input type="number" step="0.1" id="tg" value=""></div>
+        <div class="form-group"><label>Creatinine (mg/dL)</label><input type="number" step="0.1" id="creatinine" value=""></div>
+    </div>
+
+    <h2>🖼️ Imaging & Mass</h2>
+    <div class="form-row">
+        <div class="form-group"><label>Remnant thyroid mass (grams) — from ultrasound</label><input type="number" step="any" id="mass" required></div>
+        <div class="form-group"><label>RAUI (%) — optional</label><input type="number" step="any" id="raui" placeholder="Leave empty to use 1.04%"></div>
+    </div>
+
+    <h2>🏷️ TNM Staging</h2>
+    <div class="form-row">
+        <div class="form-group"><label>T stage</label><select id="tstage"><option>T1</option><option>T2</option><option>T3</option></select></div>
+        <div class="form-group"><label>N stage</label><select id="nstage"><option>N0</option><option>N1a</option><option>N1b</option></select></div>
+        <div class="form-group"><label>M stage</label><select id="mstage"><option>M0</option><option>M1</option></select></div>
+        <div class="form-group"><label>Surgery type</label><select id="surgery"><option>Total thyroidectomy</option><option>Partial thyroidectomy</option></select></div>
+    </div>
+
+    <button id="calculateBtn">💊 Calculate Suggested Dose</button>
+
+    <div id="resultArea" class="result-box" style="display: none;"></div>
+    <footer>⚠️ Clinical decision support tool – final decision by treating physician. Full Dosimetry cases are notified.</footer>
+</div>
+
+<script>
+    // Constants
+    const D_TARGET = 300;      // Gy
+    const T_EFF = 8.04;        // days
+    const DEFAULT_RAUI = 1.04; // % (used when field empty)
+
+    // DOM elements
+    const massInput = document.getElementById('mass');
+    const rauiInput = document.getElementById('raui');
+    const tshInput = document.getElementById('tsh');
+    const tgInput = document.getElementById('tg');
+    const creatinineInput = document.getElementById('creatinine');
+    const nstageSelect = document.getElementById('nstage');
+    const mstageSelect = document.getElementById('mstage');
+    const tstageSelect = document.getElementById('tstage');
+    const resultDiv = document.getElementById('resultArea');
+    const calcBtn = document.getElementById('calculateBtn');
+
+    function getRiskCategory(T, N, M) {
+        if (M === 'M1') return 'High (outside scope)';
+        if (T === 'T1' && N === 'N0') return 'Low';
+        if ((T === 'T2' && N === 'N0') || (T === 'T1' && N === 'N1a')) return 'Intermediate';
+        if (T === 'T3' || N === 'N1a') return 'Intermediate';
+        if (N === 'N1b') return 'Intermediate (high)';
+        return 'Intermediate';
+    }
+
+    function isFullDosimetryRequired(creatinine, Nstage, Mstage) {
+        if (Mstage === 'M1') return { required: true, reason: 'M1 → Distant metastases – Full Dosimetry required' };
+        if (Nstage === 'N1b') return { required: true, reason: 'N1b → Full Dosimetry recommended (calculation blocked per protocol)' };
+        if (creatinine > 1.5) return { required: true, reason: 'Poor kidney function (Creatinine > 1.5 mg/dL) – Full Dosimetry required' };
+        return { required: false, reason: '' };
+    }
+
+    function getWarnings(tsh, tg, rauiProvided, calculatedMCi) {
+        let warns = [];
+        if (!isNaN(tsh) && tsh < 30) warns.push(`⚠️ Low TSH (${tsh}) – Check preparation (TSH > 30 recommended)`);
+        if (!isNaN(tg) && tg > 10) warns.push(`⚠️ High Thyroglobulin (${tg}) – Review imaging for residual disease`);
+        if (!rauiProvided) warns.push('ℹ️ Using default RAUI = 1.04% (field left empty)');
+        if (calculatedMCi !== undefined && calculatedMCi < 30) warns.push('⚠️ Calculated dose < 30 mCi – Check inputs (mass too low or RAUI too high?)');
+        if (calculatedMCi !== undefined && calculatedMCi > 150) warns.push('⚠️ Dose > 150 mCi – Full Dosimetry strongly recommended');
+        return warns;
+    }
+
+    // CORRECTED FORMULA: A(MBq) = (25 * m * 300) / (RAUI * 8.04)
+    function calculateDose(massGram, rauiPercent) {
+        if (!massGram || massGram <= 0) return null;
+        const raui = (rauiPercent !== undefined && !isNaN(rauiPercent)) ? rauiPercent : DEFAULT_RAUI;
+        if (raui <= 0) return null;
+        const mbq = (25 * massGram * D_TARGET) / (raui * T_EFF);
+        const mci = mbq / 37;
+        return { mbq, mci };
+    }
+
+    function computeAndDisplay() {
+        const mass = parseFloat(massInput.value);
+        const rauiRaw = rauiInput.value.trim() === '' ? null : parseFloat(rauiInput.value);
+        const tsh = parseFloat(tshInput.value);
+        const tg = parseFloat(tgInput.value);
+        const creatinine = parseFloat(creatinineInput.value);
+        const nstage = nstageSelect.value;
+        const mstage = mstageSelect.value;
+        const tstage = tstageSelect.value;
+
+        // RAUI handling
+        let rauiValue = rauiRaw;
+        let rauiSource = 'actual';
+        if (rauiRaw === null || isNaN(rauiRaw)) {
+            rauiValue = DEFAULT_RAUI;
+            rauiSource = 'default (1.04%)';
+        } else if (rauiRaw <= 0) {
+            alert("RAUI must be > 0, using default 1.04%");
+            rauiValue = DEFAULT_RAUI;
+            rauiSource = 'default (1.04%)';
+        }
+
+        // Blocking conditions
+        const fullDoseCheck = isFullDosimetryRequired(creatinine, nstage, mstage);
+        if (fullDoseCheck.required) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="alert">🚫 ${fullDoseCheck.reason}</div>
+                <div class="warning">❌ Cannot calculate using basic equation. Full Dosimetry is mandatory.</div>
+                <button onclick="clearAndRetry()" style="background:#6c757d; margin-top:12px;">🔄 Reset</button>
+            `;
+            return;
+        }
+
+        const dose = calculateDose(mass, rauiValue);
+        if (!dose || mass <= 0 || isNaN(mass)) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<div class="alert">❗ Invalid or missing mass (must be > 0 g).</div>`;
+            return;
+        }
+
+        const doseMCi = dose.mci;
+        const doseMBq = dose.mbq;
+        const warnings = getWarnings(tsh, tg, (rauiRaw !== null && !isNaN(rauiRaw)), doseMCi);
+        const riskCat = getRiskCategory(tstage, nstage, mstage);
+
+        let alertsHtml = '';
+        if (warnings.length) {
+            alertsHtml = `<div class="warning" style="margin-top:10px;"><strong>📢 Alerts:</strong><ul>`;
+            warnings.forEach(w => { alertsHtml += `<li>${w}</li>`; });
+            alertsHtml += `</ul></div>`;
+        }
+
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">💊 Suggested Dose</h3>
+                <span class="badge">Risk: ${riskCat}</span>
+            </div>
+            <div style="font-size:1.6rem; font-weight:bold; margin:15px 0;">
+                ${doseMBq.toFixed(1)} MBq   |   ${doseMCi.toFixed(1)} mCi
+            </div>
+            <div style="background:#eef2ff; border-radius:16px; padding:10px;">
+                📐 <strong>Formula used:</strong> A = (25 × ${mass} × 300) / (${rauiValue} × 8.04)<br>
+                RAUI = ${rauiValue}% (${rauiSource}) | Teff = 8.04 days | D<sub>target</sub> = 300 Gy
+            </div>
+            <div style="margin-top:12px;">
+                <strong>🧬 Additional Info:</strong><br>
+                TSH: ${isNaN(tsh) ? '—' : tsh} µIU/mL | Thyroglobulin: ${isNaN(tg) ? '—' : tg} ng/mL | Creatinine: ${isNaN(creatinine) ? '—' : creatinine} mg/dL<br>
+                TNM: ${tstage} ${nstage} ${mstage} | Surgery: ${document.getElementById('surgery').value}
+            </div>
+            ${alertsHtml}
+            <hr>
+            <div style="font-size:0.85rem; color:#334155;">
+                ✔ Default RAUI = 1.04% used when not provided. ${doseMCi > 150 ? '<span style="color:#c2410c;">🔔 Dose >150 mCi – Full Dosimetry recommended.</span>' : ''}
+            </div>
+            <button onclick="clearAndRetry()" style="background:#334155; margin-top:16px;">🗑️ Clear & New Calculation</button>
+        `;
+    }
+
+    window.clearAndRetry = function() {
+        document.getElementById('age').value = '';
+        document.getElementById('weight').value = '';
+        document.getElementById('tsh').value = '';
+        document.getElementById('tg').value = '';
+        document.getElementById('creatinine').value = '';
+        document.getElementById('mass').value = '';
+        document.getElementById('raui').value = '';
+        document.getElementById('tstage').value = 'T1';
+        document.getElementById('nstage').value = 'N0';
+        document.getElementById('mstage').value = 'M0';
+        document.getElementById('surgery').value = 'Total thyroidectomy';
+        resultDiv.style.display = 'none';
+    };
+
+    calcBtn.addEventListener('click', computeAndDisplay);
+    resultDiv.style.display = 'none';
+</script>
+</body>
+</html>
